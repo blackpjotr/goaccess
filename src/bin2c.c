@@ -9,7 +9,6 @@
  * I have decided not to change the licence.
  */
 
-#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -85,7 +84,7 @@ main (int argc, char *argv[]) {
 
 #ifdef USE_BZ2
   // allocate for bz2.
-  bz2_size = (file_size + file_size / 100 + 1) + 600;   // as per the documentation
+  bz2_size = (file_size + file_size / 100 + 1) + 600; // as per the documentation
 
   if ((bz2_buf = malloc (bz2_size)) == NULL) {
     fprintf (stderr, "Unable to malloc bin2c.c buffer\n");

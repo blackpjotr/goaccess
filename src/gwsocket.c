@@ -7,7 +7,7 @@
  * \____/  |__/|__//____/\____/\___/_/|_|\___/\__/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,12 +29,10 @@
  */
 
 #include <stdio.h>
-#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include "gwsocket.h"
@@ -43,7 +41,6 @@
 #include "error.h"
 #include "goaccess.h"
 #include "json.h"
-#include "parser.h"
 #include "settings.h"
 #include "websocket.h"
 #include "xmalloc.h"
@@ -94,7 +91,7 @@ write_holder (int fd, const char *buf, int len) {
 
 /* Clear an incoming FIFO packet and header data. */
 static void
-clear_fifo_packet (GWSReader * gwserver) {
+clear_fifo_packet (GWSReader *gwserver) {
   memset (gwserver->hdr, 0, sizeof (gwserver->hdr));
   gwserver->hlen = 0;
 
@@ -157,7 +154,7 @@ send_holder_to_client (int fd, int listener, const char *buf, int len) {
  * If there's less data than requested, 0 is returned
  * If the thread is done, 1 is returned */
 int
-read_fifo (GWSReader * gwsreader, void (*f) (int)) {
+read_fifo (GWSReader *gwsreader, void (*f) (int)) {
   WSPacket **pa = &gwsreader->packet;
   char *ptr;
   int bytes = 0, readh = 0, need = 0, fd = gwsreader->fd;
@@ -183,8 +180,8 @@ read_fifo (GWSReader * gwsreader, void (*f) (int)) {
     return 0;
   }
 
-  readh = gwsreader->hlen;      /* read from header so far */
-  need = HDR_SIZE - readh;      /* need to read */
+  readh = gwsreader->hlen; /* read from header so far */
+  need = HDR_SIZE - readh; /* need to read */
   if (need > 0) {
     if ((bytes = ws_read_fifo (fd, gwsreader->hdr, &gwsreader->hlen, readh, need)) < 0)
       return 0;
@@ -205,8 +202,8 @@ read_fifo (GWSReader * gwsreader, void (*f) (int)) {
     (*pa)->data = xcalloc (size + 1, sizeof (char));
   }
 
-  readh = (*pa)->len;   /* read from payload so far */
-  need = (*pa)->size - readh;   /* need to read */
+  readh = (*pa)->len; /* read from payload so far */
+  need = (*pa)->size - readh; /* need to read */
   if (need > 0) {
     if ((bytes = ws_read_fifo (fd, (*pa)->data, &(*pa)->len, readh, need)) < 0)
       return 0;
@@ -225,7 +222,7 @@ read_fifo (GWSReader * gwsreader, void (*f) (int)) {
  * It writes to a named pipe a header containing the socket, the
  * message type, the payload's length and the actual payload */
 static int
-onopen (WSPipeOut * pipeout, WSClient * client) {
+onopen (WSPipeOut *pipeout, WSClient *client) {
   uint32_t hsize = sizeof (uint32_t) * 3;
   char *hdr = calloc (hsize, sizeof (char));
   char *ptr = hdr;
@@ -294,7 +291,7 @@ set_self_pipe (int *self_pipe) {
 
 /* Close the WebSocket server and clean up. */
 void
-stop_ws_server (GWSWriter * gwswriter, GWSReader * gwsreader) {
+stop_ws_server (GWSWriter *gwswriter, GWSReader *gwsreader) {
   pthread_t writer, reader;
   WSServer *server = NULL;
 
@@ -363,7 +360,7 @@ set_ws_opts (void) {
 
 /* Setup and start the WebSocket threads. */
 int
-setup_ws_server (GWSWriter * gwswriter, GWSReader * gwsreader) {
+setup_ws_server (GWSWriter *gwswriter, GWSReader *gwsreader) {
   int id;
   pthread_t *thread;
 

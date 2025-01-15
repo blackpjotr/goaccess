@@ -6,7 +6,7 @@
  * \____/\____/_/  |_\___/\___/\___/____/____/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -33,32 +33,7 @@
 #include "commons.h"
 #include "parser.h"
 
-/* Total number of storage metrics (GSMetric) */
-#define GSMTRC_TOTAL 19
 #define DB_PATH "/tmp"
-
-/* Enumerated Storage Metrics */
-typedef enum GSMetric_ {
-  MTRC_KEYMAP,
-  MTRC_ROOTMAP,
-  MTRC_DATAMAP,
-  MTRC_UNIQMAP,
-  MTRC_ROOT,
-  MTRC_HITS,
-  MTRC_VISITORS,
-  MTRC_BW,
-  MTRC_CUMTS,
-  MTRC_MAXTS,
-  MTRC_METHODS,
-  MTRC_PROTOCOLS,
-  MTRC_AGENTS,
-  MTRC_METADATA,
-  MTRC_UNIQUE_KEYS,
-  MTRC_AGENT_KEYS,
-  MTRC_AGENT_VALS,
-  MTRC_CNT_VALID,
-  MTRC_CNT_BW,
-} GSMetric;
 
 #define GAMTRC_TOTAL 8
 /* Enumerated App Metrics */
@@ -72,6 +47,48 @@ typedef enum GAMetric_ {
   MTRC_METH_PROTO,
   MTRC_DB_PROPS,
 } GAMetric;
+
+/* Enumerated Storage Metrics */
+typedef enum GSMetricType_ {
+  /* uint32_t key - uint32_t val */
+  MTRC_TYPE_II32,
+  /* uint32_t key - string val */
+  MTRC_TYPE_IS32,
+  /* uint32_t key - uint64_t val */
+  MTRC_TYPE_IU64,
+  /* string key   - uint32_t val */
+  MTRC_TYPE_SI32,
+  /* string key   - uint8_t val */
+  MTRC_TYPE_SI08,
+  /* uint32_t key - uint8_t val */
+  MTRC_TYPE_II08,
+  /* string key   - string val */
+  MTRC_TYPE_SS32,
+  /* uint32_t key - GSLList val */
+  MTRC_TYPE_IGSL,
+  /* string key   - uint64_t val */
+  MTRC_TYPE_SU64,
+  /* uint32_t key - GKHashStorage_ val */
+  MTRC_TYPE_IGKH,
+  /* uint64_t key - uint32_t val */
+  MTRC_TYPE_U648,
+  /* uint64_t key - GLastParse val */
+  MTRC_TYPE_IGLP,
+} GSMetricType;
+
+typedef struct GKHashMetric_ {
+  union {
+    GSMetric storem;
+    GAMetric dbm;
+  } metric;
+  GSMetricType type;
+  void *(*alloc) (void);
+  void (*des) (void *, uint8_t free_data);
+  void (*del) (void *, uint8_t free_data);
+  uint8_t free_data:1;
+  void *hash;
+  const char *filename;
+} GKHashMetric;
 
 /* Each record contains a data value, i.e., Windows XP, and it may contain a
  * root value, i.e., Windows, and a unique key which is the combination of
@@ -123,14 +140,14 @@ typedef struct httpprotocols_ {
 
 extern const httpmethods http_methods[];
 extern const httpprotocols http_protocols[];
-extern size_t http_methods_len;
-extern size_t http_protocols_len;
+extern const size_t http_methods_len;
+extern const size_t http_protocols_len;
 
-char *get_mtr_str (GSMetric metric);
+const char *get_mtr_str (GSMetric metric);
 int excluded_ip (GLogItem * logitem);
 uint32_t *i322ptr (uint32_t val);
 uint64_t *uint642ptr (uint64_t val);
-void count_process_and_invalid (GLog * glog, const char *line);
+void count_process_and_invalid (GLog * glog, GLogItem * logitem, const char *line);
 void count_process (GLog * glog);
 void free_gmetrics (GMetrics * metric);
 void insert_methods_protocols (void);

@@ -7,7 +7,7 @@
  * \____/\____/_/  |_\___/\___/\___/____/____/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -148,8 +148,8 @@ setup_sigsegv_handler (void) {
 }
 
 static void
-dump_struct_data (FILE * fp, GLog * glog, int pid) {
-  fprintf (fp, "==%d== FILE: %s\n", pid, glog->filename);
+dump_struct_data (FILE *fp, GLog *glog, int pid) {
+  fprintf (fp, "==%d== FILE: %s\n", pid, glog->props.filename);
   fprintf (fp, "==%d== Line number: %" PRIu64 "\n", pid, glog->processed);
   fprintf (fp, "==%d== Invalid data: %" PRIu64 "\n", pid, glog->invalid);
   fprintf (fp, "==%d== Piping: %d\n", pid, glog->piping);
@@ -159,7 +159,7 @@ dump_struct_data (FILE * fp, GLog * glog, int pid) {
 /* Dump to the standard output the values of the overall parsed log
  * data. */
 static void
-dump_struct (FILE * fp) {
+dump_struct (FILE *fp) {
   int pid = getpid (), i;
 
   if (!log_data)
@@ -254,7 +254,7 @@ unknowns_fprintf (const char *fmt, ...) {
   va_end (args);
 }
 
-/* Debug otuput */
+/* Debug output */
 void
 dbg_printf (const char *fmt, ...) {
   va_list args;

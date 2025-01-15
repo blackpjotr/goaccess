@@ -7,7 +7,7 @@
  * \____/\____/_/  |_\___/\___/\___/____/____/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -41,16 +41,12 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <ctype.h>
-#include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/stat.h>
-#include <sys/types.h>
 #include <sys/socket.h>
 #include <time.h>
-#include <unistd.h>
 
 #include "gdns.h"
 
@@ -65,7 +61,7 @@ static GDnsQueue *gdns_queue;
 
 /* Initialize the queue. */
 void
-gqueue_init (GDnsQueue * q, int capacity) {
+gqueue_init (GDnsQueue *q, int capacity) {
   q->head = 0;
   q->tail = -1;
   q->size = 0;
@@ -76,7 +72,7 @@ gqueue_init (GDnsQueue * q, int capacity) {
  *
  * Returns the size of the queue. */
 int
-gqueue_size (GDnsQueue * q) {
+gqueue_size (GDnsQueue *q) {
   return q->size;
 }
 
@@ -84,7 +80,7 @@ gqueue_size (GDnsQueue * q) {
  *
  * Returns true if empty, otherwise false. */
 int
-gqueue_empty (GDnsQueue * q) {
+gqueue_empty (GDnsQueue *q) {
   return q->size == 0;
 }
 
@@ -92,13 +88,13 @@ gqueue_empty (GDnsQueue * q) {
  *
  * Returns true if full, otherwise false. */
 int
-gqueue_full (GDnsQueue * q) {
+gqueue_full (GDnsQueue *q) {
   return q->size == q->capacity;
 }
 
 /* Free the queue. */
 void
-gqueue_destroy (GDnsQueue * q) {
+gqueue_destroy (GDnsQueue *q) {
   free (q);
 }
 
@@ -107,7 +103,7 @@ gqueue_destroy (GDnsQueue * q) {
  * If the queue is full, -1 is returned.
  * If added to the queue, 0 is returned. */
 int
-gqueue_enqueue (GDnsQueue * q, const char *item) {
+gqueue_enqueue (GDnsQueue *q, const char *item) {
   if (gqueue_full (q))
     return -1;
 
@@ -123,7 +119,7 @@ gqueue_enqueue (GDnsQueue * q, const char *item) {
  * If the queue is empty, or the item is not in the queue, 0 is returned.
  * If found, 1 is returned. */
 int
-gqueue_find (GDnsQueue * q, const char *item) {
+gqueue_find (GDnsQueue *q, const char *item) {
   int i;
   if (gqueue_empty (q))
     return 0;
@@ -140,7 +136,7 @@ gqueue_find (GDnsQueue * q, const char *item) {
  * If the queue is empty, NULL is returned.
  * If removed, the string item is returned. */
 char *
-gqueue_dequeue (GDnsQueue * q) {
+gqueue_dequeue (GDnsQueue *q) {
   char *item;
   if (gqueue_empty (q))
     return NULL;

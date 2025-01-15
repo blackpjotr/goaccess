@@ -7,7 +7,7 @@
  * \____/\____/_/  |_\___/\___/\___/____/____/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,6 @@
 #include <string.h>
 #include <stddef.h>
 
-#include "opesys.h"
 #include "browsers.h"
 
 #include "error.h"
@@ -48,8 +47,8 @@
 static char ***browsers_hash = NULL;
 
 /* {"search string", "belongs to"} */
-static const char *browsers[][2] = {
-  /* Game systems: most of them are based of major browsers,
+static const char *const browsers[][2] = {
+  /* Game systems: most of them are based on major browsers,
    * thus they need to go before. */
   {"Xbox One", "Game Systems"},
   {"Xbox", "Game Systems"},
@@ -132,6 +131,9 @@ static const char *browsers[][2] = {
   {"libmpv", "Others"},
   {"aria2", "Others"},
 
+  /* WordPress Cron */
+  {"WordPress/", "Cron"},
+
   /* Feed-reader-as-a-service */
   {"AppleNewsBot", "Feeds"},
   {"Bloglines", "Feeds"},
@@ -204,6 +206,7 @@ static const char *browsers[][2] = {
   {"yacybot", "Crawlers"},
   {"PycURL", "Crawlers"},
   {"PHP", "Crawlers"},
+  {"ClaudeBot", "Crawlers"},
   {"AndroidDownloadManager", "Crawlers"},
   {"Embedly", "Crawlers"},
   {"ruby", "Crawlers"},
@@ -212,7 +215,7 @@ static const char *browsers[][2] = {
   {"Python", "Crawlers"},
   {"LinkedIn", "Crawlers"},
   {"Microsoft-WebDAV", "Crawlers"},
-  {"DuckDuckGo-Favicons-Bot", "Crawlers"},
+  {"DuckDuckGo", "Crawlers"},
   {"bingbot", "Crawlers"},
   {"PetalBot", "Crawlers"},
   {"Discordbot", "Crawlers"},
@@ -241,9 +244,18 @@ static const char *browsers[][2] = {
   {"ZmEu", "Crawlers"},
   {"DowntimeDetector", "Crawlers"},
   {"MauiBot", "Crawlers"},
-  {"Cloud", "Crawlers"},
   {"stagefright", "Crawlers"},
+  {"ImagesiftBot", "Crawlers"},
+  {"Bytespider", "Crawlers"},
+  {"ZoteroTranslationServer", "Cralwers"}, /* Nodeja Zotero Translation Server https://github.com/zotero/translation-server */
 
+  /* HTTP Library or HTTP Server User Agents - Suggest New Category */
+  {"axios", "HTTP Library"}, /* NodeJS axios axios-http.com */
+  {"lua-resty-http", "HTTP Library"}, /* Nginx lua-resty-http module */
+
+  /* Citation Services */
+  {"Citoid", "Citation"}, /* MediaWiki Citoid Citation Service https://www.mediawiki.org/wiki/Citoid */
+  {"EasyBib", "Citation"}, /* Easybib Citation https://easybib.com */
 
   /* Podcast fetchers */
   {"Downcast", "Podcasts"},
@@ -270,6 +282,7 @@ static const char *browsers[][2] = {
   {"Thunderbird", "Feeds"},
   {"Winds", "Feeds"},
 
+  /* Uptime and Monitoring clients */
   {"Pingdom.com", "Uptime"},
   {"jetmon", "Uptime"},
   {"NodeUptime", "Uptime"},
@@ -277,6 +290,18 @@ static const char *browsers[][2] = {
   {"StatusCake", "Uptime"},
   {"internetVista", "Uptime"},
   {"Server Density Service Monitoring v2", "Uptime"},
+  {"Better Uptime Bot", "Uptime"},
+  {"Site24x7", "Uptime"},
+  {"Uptime-Kuma", "Uptime"},
+
+  /* Performance and Caching - Suggest a new category */
+  {"ShortPixel", "Performance"}, /* Image Optimization */
+  {"WP Rocket", "Caching"}, /* Preloading Cache for WordPress Plugin */
+
+  /* Security - Suggest a new category */
+  {"Barracuda Sentinel", "Security"}, /* Barricuda spear fishing service */
+  {"ACI Site Scanner", "Security"}, /* Can't confirm specific vendor */
+
 
   {"Mozilla", "Others"}
 };
@@ -405,8 +430,7 @@ parse_browsers_file (void) {
 int
 is_crawler (const char *agent) {
   char btype[BROWSER_TYPE_LEN];
-  char otype[OPESYS_TYPE_LEN];
-  char *browser, *os, *a;
+  char *browser, *a;
 
   if (agent == NULL || *agent == '\0')
     return 0;
@@ -415,23 +439,7 @@ is_crawler (const char *agent) {
     free (browser);
   free (a);
 
-  if (strcmp (btype, "Crawlers") == 0)
-    return 1;
-
-  if (!conf.unknowns_as_crawlers)
-    return 0;
-
-  if (strcmp (btype, "Unknown") == 0)
-    return 1;
-
-  if ((a = xstrdup (agent), os = verify_os (a, otype)) != NULL)
-    free (os);
-  free (a);
-
-  if (strcmp (otype, "Unknown") == 0)
-    return 1;
-
-  return 0;
+  return strcmp (btype, "Crawlers") == 0 ? 1 : 0;
 }
 
 /* Return the Opera 15 and beyond.
@@ -592,7 +600,10 @@ verify_browser (char *str, char *type) {
   if (conf.unknowns_log)
     LOG_UNKNOWNS (("%-7s%s\n", "[BR]", str));
 
-  xstrncpy (type, "Unknown", BROWSER_TYPE_LEN);
+  if (conf.unknowns_as_crawlers && strcmp (type, "Crawlers"))
+    xstrncpy (type, "Crawlers", BROWSER_TYPE_LEN);
+  else
+    xstrncpy (type, "Unknown", BROWSER_TYPE_LEN);
 
   return alloc_string ("Unknown");
 }

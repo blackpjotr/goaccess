@@ -20,9 +20,13 @@ jobs:
           - arch: arm32v7
             distro: ubuntu22.04
           - arch: arm32v7
-            distro: ubuntu22.10            
+            distro: ubuntu24.04
+          - arch: arm32v7
+            distro: ubuntu24.10            
           - arch: arm32v7
             distro: bullseye
+          - arch: arm32v7
+            distro: bookworm
           - arch: aarch64
             distro: ubuntu16.04
           - arch: aarch64
@@ -32,19 +36,27 @@ jobs:
           - arch: aarch64
             distro: ubuntu22.04
           - arch: aarch64
-            distro: ubuntu22.10            
+            distro: ubuntu24.04
+          - arch: aarch64
+            distro: ubuntu24.10            
           - arch: aarch64
             distro: buster
           - arch: aarch64
             distro: bullseye
+          - arch: aarch64
+            distro: bookworm
           - arch: amd64
             distro: buster
           - arch: i386
             distro: buster
           - arch: amd64
             distro: bullseye
+          - arch: amd64
+            distro: bookworm
           - arch: i386
             distro: bullseye
+          - arch: i386
+            distro: bookworm
           - arch: amd64
             distro: ubuntu16.04
           - arch: i386
@@ -58,7 +70,9 @@ jobs:
           - arch: amd64
             distro: ubuntu22.04
           - arch: amd64
-            distro: ubuntu22.10            
+            distro: ubuntu24.04
+          - arch: amd64
+            distro: ubuntu24.10            
 
     steps:
       - uses: actions/checkout@v2.1.0
@@ -91,7 +105,7 @@ jobs:
           # no secrets are present in the container state or logs.
           install: |
             case "${{ matrix.distro }}" in
-              ubuntu*|jessie|stretch|buster|bullseye)
+              ubuntu*|jessie|stretch|buster|bullseye|bookworm)
                 apt-get update && apt-get install -y ca-certificates wget curl lsb-release && apt-get clean all
                 ;;
             esac

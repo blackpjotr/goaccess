@@ -99,10 +99,21 @@ window.GoAccess = window.GoAccess || {
 		this.setWebSocket(wsConn);
 	},
 
+	buildWSURI: function (wsConn) {
+		var url = null;
+		if (!wsConn.url || !wsConn.port)
+			return null;
+		url = /^wss?:\/\//i.test(wsConn.url) ? wsConn.url : window.location.protocol === "https:" ? 'wss://' + wsConn.url : 'ws://' + wsConn.url;
+		return new URL(url).protocol + '//' + new URL(url).hostname + ':' + wsConn.port + new URL(url).pathname;
+	},
+
 	setWebSocket: function (wsConn) {
-		var host = null, pingId = null;
-		host = wsConn.url ? wsConn.url : window.location.hostname ? window.location.hostname : "localhost";
-		var str = /^(wss?:\/\/)?[^\/]+:[0-9]{1,5}\//.test(host + "/") ? host : String(host + ':' + wsConn.port);
+		var host = null, pingId = null, uri = null, defURI = null, str = null;
+
+		defURI = window.location.hostname ? window.location.hostname + ':' + wsConn.port : "localhost" + ':' + wsConn.port;
+		uri = wsConn.url && /^(wss?:\/\/)?[^\/]+:[0-9]{1,5}/.test(wsConn.url) ? wsConn.url : this.buildWSURI(wsConn);
+
+		str = uri || defURI;
 		str = !/^wss?:\/\//i.test(str) ? (window.location.protocol === "https:" ? 'wss://' : 'ws://') + str : str;
 
 		var socket = new WebSocket(str);
@@ -157,7 +168,7 @@ GoAccess.Util = {
 		}, 0) >>> 0).toString(16);
 	},
 
-	// Format bytes to human readable
+	// Format bytes to human-readable
 	formatBytes: function (bytes, decimals, numOnly) {
 		if (bytes == 0)
 			return numOnly ? 0 : '0 Byte';
@@ -173,7 +184,7 @@ GoAccess.Util = {
 		return !isNaN(parseFloat(n)) && isFinite(n);
 	},
 
-	// Format microseconds to human readable
+	// Format microseconds to human-readable
 	utime2str: function (usec) {
 		if (usec >= 864E8)
 			return ((usec) / 864E8).toFixed(2) + ' d';
@@ -209,7 +220,7 @@ GoAccess.Util = {
 		if (n >= 1e12) return +(n / 1e12).toFixed(1) + "T";
 	},
 
-	// Format field value to human readable
+	// Format field value to human-readable
 	fmtValue: function (value, dataType, decimals, shorten, hlregex, hlvalue) {
 		var val = 0;
 		if (!dataType)
@@ -248,6 +259,7 @@ GoAccess.Util = {
 		if (hlregex) {
 			let o = JSON.parse(hlregex), tmp = '';
 			for (var x in o) {
+				if (!val) continue;
 				tmp = val.replace(new RegExp(x, 'gi'), o[x]);
 				if (tmp != val) {
 					val = tmp;
@@ -1046,7 +1058,7 @@ GoAccess.Charts = {
 		}
 	},
 
-	// Iterate over the item properties and and extract the count value.
+	// Iterate over the item properties and extract the count value.
 	extractCount: function (item) {
 		var o = {};
 		for (var prop in item)
@@ -1080,6 +1092,16 @@ GoAccess.Charts = {
 		for (var prop in key)
 			arr.push(datum[key[prop]]);
 		return arr.join(' ');
+	},
+
+	getWMap: function (panel, plotUI, data) {
+		var chart = WorldMap(d3.select("#chart-" + panel));
+		chart.width($("#chart-" + panel).getBoundingClientRect().width);
+		chart.height(400);
+		chart.metric(plotUI['d3']['y0']['key']);
+		chart.opts(plotUI);
+
+		return chart;
 	},
 
 	getAreaSpline: function (panel, plotUI, data) {
@@ -1174,6 +1196,9 @@ GoAccess.Charts = {
 		case 'bar':
 			chart = this.getVBar(panel, plotUI, data);
 			break;
+		case 'wmap':
+			chart = this.getWMap(panel, plotUI, data);
+			break;
 		}
 
 		return chart;
@@ -1184,7 +1209,7 @@ GoAccess.Charts = {
 		d3.select('#chart-' + panel + '>.chart-tooltip-wrap')
 			.remove();
 		// remove svg
-		d3.select('#chart-' + panel).select('svg')
+		d3.select('#chart-' + panel).selectAll('svg')
 			.remove();
 		// add chart to the document
 		d3.select("#chart-" + panel)
@@ -1238,7 +1263,8 @@ GoAccess.Charts = {
 
 		d3.select("#chart-" + panel)
 			.datum(this.processChartData(this.getPanelData(panel, data)))
-			.call(chart.width($("#chart-" + panel).offsetWidth));
+			.call(chart.width($("#chart-" + panel).offsetWidth))
+			.append("div").attr("class", "chart-tooltip-wrap");
 	},
 
 	// Reload (doesn't redraw) all chart's data
@@ -1808,14 +1834,28 @@ GoAccess.App = {
 	sortData: function (panel, field, order) {
 		// panel's data
 		var panelData = GoAccess.getPanelData(panel).data;
-		panelData.sort(function (a, b) {
-			a = this.sortField(a, field);
-			b = this.sortField(b, field);
 
-			if (typeof a === 'string' && typeof b === 'string')
-				return 'asc' == order ? a.localeCompare(b) : b.localeCompare(a);
-			return  'asc' == order ? a - b : b - a;
-		}.bind(this));
+		// Function to sort an array of objects
+		var sortArray = function(arr) {
+			arr.sort(function (a, b) {
+				a = this.sortField(a, field);
+				b = this.sortField(b, field);
+
+				if (typeof a === 'string' && typeof b === 'string')
+					return 'asc' == order ? a.localeCompare(b) : b.localeCompare(a);
+				return  'asc' == order ? a - b : b - a;
+			}.bind(this));
+		}.bind(this);
+
+		// Sort panelData
+		sortArray(panelData);
+
+		// Sort the items sub-array
+		panelData.forEach(function(item) {
+			if (item.items) {
+				sortArray(item.items);
+			}
+		});
 	},
 
 	setInitSort: function () {

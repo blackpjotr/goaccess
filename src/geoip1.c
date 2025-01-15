@@ -7,7 +7,7 @@
  * \____/\____/_/  |_\___/\___/\___/____/____/
  *
  * The MIT License (MIT)
- * Copyright (c) 2009-2022 Gerardo Orellana <hello @ goaccess.io>
+ * Copyright (c) 2009-2024 Gerardo Orellana <hello @ goaccess.io>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -93,7 +93,7 @@ geoip_open_db (const char *db) {
 }
 
 static int
-set_geoip_db_by_type (GeoIP * geoip, GO_GEOIP_DB type) {
+set_geoip_db_by_type (GeoIP *geoip, GO_GEOIP_DB type) {
   unsigned char rec = GeoIP_database_edition (geoip);
 
   switch (rec) {
@@ -122,7 +122,7 @@ set_geoip_db_by_type (GeoIP * geoip, GO_GEOIP_DB type) {
 }
 
 static int
-set_conf_by_type (GeoIP * geoip) {
+set_conf_by_type (GeoIP *geoip) {
   unsigned char rec = GeoIP_database_edition (geoip);
 
   switch (rec) {
